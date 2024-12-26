@@ -1,17 +1,13 @@
 import colorsys
-import os
-import sys
-import logging
 import random
-import itertools
 import colorsys
 
 import numpy as np
 from skimage.measure import find_contours
 import matplotlib.pyplot as plt
-from matplotlib import patches, lines
+from matplotlib import patches
 from matplotlib.patches import Polygon
-import IPython.display
+# import IPython.display
 
 
 def apply_mask(image, mask, color, alpha=0.5):
