@@ -1,4 +1,5 @@
-#车牌中的数字字母识别
+# 车牌中的数字字母识别
+# CNN: 卷积神经网络 Convolutional Neural Network
 
 import numpy as np
 import torch
@@ -12,10 +13,10 @@ from torch.utils.data import DataLoader
 from dataloader import CharacterDataset
 
 # --- 基本参数设置 ---
-epochs = 100                                                        # 
-batch_size = 1024                                                   # 
-number_classes = 34                                                 # 
-epoch_best = 10                                                     # 100个epoch中较好的一组训练结果
+epochs = 100  # 训练轮数
+batch_size = 1024  # 批处理大小
+number_classes = 34  # 分割类别（含背景类）
+epoch_best = 10  # 100 个 epoch 中较好的一组训练结果
 
 # ------------------------------------------------------------ 定义网络结构 ------------------------------------------------------------
 print('构建模型……')
@@ -25,101 +26,102 @@ class Classification(nn.Module):
         super(Classification, self).__init__()
         # 定义网络结构
         self.output = nn.Sequential(
-            nn.Conv2d(1, 32, kernel_size=3, stride=1, padding=1),   # 
+            nn.Conv2d(1, 32, kernel_size=3, stride=1, padding=1),   # 32 * 28 * 28 的卷积核
             nn.ReLU(True),                                          # 
 
-            nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=1),  # 
+            nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=1),  # 64 * 28 * 28 的卷积核
             nn.ReLU(True),
             
-            nn.MaxPool2d(kernel_size=2, stride=2),                  # 
+            nn.MaxPool2d(kernel_size=2, stride=2),                  # 池化层，2 * 2 的池化核，步长为 2
             
-            nn.Flatten(),                                           #
+            nn.Flatten(),                                           # 一维化
 
-            nn.Linear(12544, 128),                                  # 
+            nn.Linear(12544, 128),                                  # 全连接层，128 个神经元
             nn.ReLU(True), 
-            # 
-            nn.Dropout(0.5),                                        #
+            
+            nn.Dropout(0.5),                                        # Dropout 层，防止过拟合
 
-            nn.Linear(128, number_classes),                         #
+            nn.Linear(128, number_classes),                         # 全连接层，34 个神经元
         )
     def forward(self, x):
         output = self.output(x)
         return output
 
-# # ------------------------------------------------------------ 网络训练 ------------------------------------------------------------
-# CC = Classification()                                               # 
-# lossFun = nn.CrossEntropyLoss()                                     # 
-# optimizer = optim.Adadelta(CC.parameters())                         # 
+# ------------------------------------------------------------ 网络训练 ------------------------------------------------------------
+CC = Classification()                                               # 构造网络
+lossFun = nn.CrossEntropyLoss()                                     # 采用交叉熵损失函数
+optimizer = optim.Adadelta(CC.parameters())                         # 采用 Adadelta 优化器
 
-# # # 载入并更新网络、优化器权重参数
-# # weights_net = torch.load('./models/CC_final.pth', map_location='cpu')
-# # CC.load_state_dict(weights_net)
-# # weights_optimizer = torch.load('./models/CC_optimizer_final.pth', map_location=='cpu')
-# # optimizer.load_state_dict(weights_optimizer)
+# # 载入并更新网络、优化器权重参数
+# weights_net = torch.load('./models/CC_final.pth', map_location='cpu')
+# CC.load_state_dict(weights_net)
+# weights_optimizer = torch.load('./models/CC_optimizer_final.pth', map_location=='cpu')
+# optimizer.load_state_dict(weights_optimizer)
 
-# print('载入数据……')
-# path = './dataset/train.txt'
-# transform = transforms.Compose([transforms.ToTensor(), ])
-# characters_train = CharacterDataset(path, transform=transform)
-# data_loader_train = DataLoader(characters_train, batch_size=batch_size, shuffle=True)
+print('载入数据……')
+path = './dataset/train.txt'
+transform = transforms.Compose([transforms.ToTensor(), ])
+characters_train = CharacterDataset(path, transform=transform)
+data_loader_train = DataLoader(characters_train, batch_size=batch_size, shuffle=True)
 
-# path = './dataset/test.txt'
-# transform = transforms.Compose([transforms.ToTensor(), ])
-# characters_test = CharacterDataset(path, transform=transform)
-# data_loader_test = DataLoader(characters_test, batch_size=batch_size, shuffle=False)
+path = './dataset/test.txt'
+transform = transforms.Compose([transforms.ToTensor(), ])
+characters_test = CharacterDataset(path, transform=transform)
+data_loader_test = DataLoader(characters_test, batch_size=batch_size, shuffle=False)
 
-# loss_epochs_train = []
-# loss_epochs_test = []
-# epochs_x = []
-# print('开始训练……')
-# for epoch in range(epochs):
-#     CC.train()                                                      # 
-#     loss_train = []
-#     for index, (images, labels) in enumerate(data_loader_train):
-#         CC_output   = CC(images)                                    # 
-#         loss        = lossFun(CC_output, labels)                    # 
-#         optimizer.zero_grad()                                       # 
-#         loss.backward()                                             # 
-#         optimizer.step()                                            # 
-#         loss_train.append(loss.data.item())
-#         print('epoch:{}, batch:{}, loss:{:.6f}'.format(epoch+1, index+1, loss.data.item()))
-#     if (epoch+1)%10 == 0:
-#         torch.save(CC.state_dict(), './models/CC_'+str(epoch+1)+'.pth')
-#         torch.save(optimizer.state_dict(), './models/CC_optimizer_'+str(epoch+1)+'.pth')
+loss_epochs_train = []
+loss_epochs_test = []
+epochs_x = []
+print('开始训练……')
+for epoch in range(epochs):
+    CC.train()                                                      # 
+    loss_train = []
+    for index, (images, labels) in enumerate(data_loader_train):
+        CC_output   = CC(images)                                    # 
+        loss        = lossFun(CC_output, labels)                    # 
+        optimizer.zero_grad()                                       # 
+        loss.backward()                                             # 
+        optimizer.step()                                            # 
+        loss_train.append(loss.data.item())
+        print('epoch:{}, batch:{}, loss:{:.6f}'.format(epoch+1, index+1, loss.data.item()))
+    if (epoch + 1) % 10 == 0:
+        torch.save(CC.state_dict(), './models/CC_'+str(epoch+1)+'.pth')
+        torch.save(optimizer.state_dict(), './models/CC_optimizer_'+str(epoch+1)+'.pth')
 
-#     # 模型测试（每个epoch使用测试集进行一次验证）
-#     CC.eval()                                                       # 
-#     loss_test = []
-#     print('开始验证……')
-#     for index, (images, labels) in enumerate(data_loader_test):
-#         CC_output   = CC(images)
-#         loss        = lossFun(CC_output, labels)
-#         loss_test.append(loss.data.item())
-#     print('平均损失：', np.mean(loss_test))
+    # 模型测试（每个 epoch 使用测试集进行一次验证）
+    CC.eval()
+    loss_test = []
+    print('开始验证……')
+    for index, (images, labels) in enumerate(data_loader_test):
+        CC_output   = CC(images)
+        loss        = lossFun(CC_output, labels)
+        loss_test.append(loss.data.item())
+    print('平均损失：', np.mean(loss_test))
 
-#     # 记录损失
-#     loss_epochs_train.append(np.mean(loss_train))
-#     loss_epochs_test.append(np.mean(loss_test))
-#     epochs_x.append(epoch+1)
+    # 记录损失
+    loss_epochs_train.append(np.mean(loss_train))
+    loss_epochs_test.append(np.mean(loss_test))
+    epochs_x.append(epoch+1)
 
-# # 最终模型保存
-# torch.save(CC.state_dict(), './models/CC_final.pth')
-# torch.save(optimizer.state_dict(), './models/CC_optimizer_final.pth')
+# 最终模型保存
+torch.save(CC.state_dict(), './models/CC_final.pth')
+torch.save(optimizer.state_dict(), './models/CC_optimizer_final.pth')
 
-# # # 损失可视化（需要安装matplotlib库，安装指令：conda install matplotlib）
-# # import matplotlib.pyplot as plt
-# # plt.figure('loss')
-# # plt.plot(epochs_x, loss_epochs_train, label='Training loss')
-# # plt.plot(epochs_x, loss_epochs_test, label='Validation loss')
-# # plt.xlabel('epochs')
-# # plt.ylabel('loss')
-# # plt.legend(frameon=False)
-# # plt.show()
+# 损失可视化（需要安装 matplotlib 库，安装指令：conda install matplotlib）
+import matplotlib.pyplot as plt
+plt.figure('loss')
+plt.plot(epochs_x, loss_epochs_train, label='Training loss')
+plt.plot(epochs_x, loss_epochs_test, label='Validation loss')
+plt.xlabel('epochs')
+plt.ylabel('loss')
+plt.legend(frameon=False)
+plt.savefig('./loss.png')
+# plt.show()
 
-# epoch_best = int(loss_epochs_test.index(min(loss_epochs_test)) / 10 + 0.6) * 10
-# if epoch_best < 10:
-#     epoch_best = 10
-# print('epoch_best:', epoch_best)
+epoch_best = int(loss_epochs_test.index(min(loss_epochs_test)) / 10 + 0.6) * 10
+if epoch_best < 10:
+    epoch_best = 10
+print('epoch_best:', epoch_best)
 
 # ------------------------------------------------------------ 网络测试 ------------------------------------------------------------
 import os

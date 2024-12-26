@@ -13,7 +13,7 @@ class CharacterDataset(Dataset):
                 words = line.split()                        
                 label = words[-1]
                 image_path = line[:-(label.__len__()+1)]
-                image_paths.append((image_path, label))     # (image_path, lable(str))
+                image_paths.append((image_path, label))  # (image_path, lable(str))
         self.image_paths = image_paths
         self.transform = transform
         self.target_transform = target_transform
@@ -23,7 +23,7 @@ class CharacterDataset(Dataset):
         image = Image.open(image_path).convert('L')
         label = int(label)
         if self.transform is not None:
-            image = self.transform(image)                   # 转换为tensor格式（1，28，28）
+            image = self.transform(image)  # 转换为 tensor 格式（1，28，28）
         return image, label
     
     def __len__(self):

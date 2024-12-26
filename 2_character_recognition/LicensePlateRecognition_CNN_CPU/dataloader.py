@@ -23,7 +23,7 @@ class CharacterDataset(Dataset):
         image = Image.open(image_path).convert('L')
         label = int(label)
         if self.transform is not None:
-            image = self.transform(image)                   # 转换为tensor格式（1，28，28）
+            image = self.transform(image)                   # 转换为 tensor 格式（1，28，28）
         return image, label
     
     def __len__(self):
